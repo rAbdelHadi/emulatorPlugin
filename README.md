@@ -1,1 +1,1 @@
-# textPlugin ![](https://api.travis-ci.org/BuildFire/textPlugin.svg)
+# emulatorPlugin ![](https://api.travis-ci.org/BuildFire/emulatorPlugin.svg)
