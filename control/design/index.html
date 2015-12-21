@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html ng-app="textPluginDesign">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>design</title>
+    <!-- CSS -->
+    <link href="../../../../styles/helper.css" rel="stylesheet">
+    <link href="../../../../styles/siteIcons.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="../../../../scripts/buildfire.js"></script>
+    <script src="../../../../scripts/angular/angular.min.js"></script>
+    <script src="../../../../scripts/buildfire/components/images/thumbnail.js"></script>
+</head>
+<body ng-controller="textPluginCtrl">
+    <div ng-form="frmMain">
+        <div class="item row margin-bottom-twenty clearfix">
+            <div class="labels col-md-3 padding-right-zero pull-left">
+                <span>Layout Style</span>
+            </div>
+			<div class="main col-md-9 pull-right">
+                <div class="screens clearfix">
+                    <div class="screen layouticon pull-left">
+                        <a class="border-radius-three default-background-hover text-center">
+		                    <img ng-src="{{ './layouts/layout' + data.design.selectedLayout + '.png'}}" >
+                        </a>
+                    </div>
+                    <div class="screen layoutgrid pull-right margin-left-zero border-grey border-radius-three">
+                        <a class="layouticon border-radius-three default-background-hover text-center" ng-repeat="layout in availableLayouts" ng-click="changeLayout($index)" ng-style="data.design.selectedLayout - 1 == $index && {'border': '1px solid'}">
+                            <img ng-src="{{ layout }}">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+		<hr class="none">
+        <div id="background"></div>
+    </div>
+    <script>
+        var textPluginApp = angular.module('textPluginDesign', []);
+
+        textPluginApp.controller('textPluginCtrl', ['$scope', function ($scope) {
+            var background = new buildfire.components.images.thumbnail("#background", { title: "Background Image", dimensionsLabel: "750x1334" }),
+                datastoreInitialized = false;
+
+            $scope.availableLayouts = [
+                "./layouts/layout1.png",
+                "./layouts/layout2.png"
+            ];
+
+            $scope.data = {
+                content: {
+                    carouselImages: [],
+                    text: "<p>&nbsp;<br></p>"
+                },
+                design: {
+                    backgroundImage: null,
+                    backgroundBlur: 0,
+                    selectedLayout: 1
+                }
+            };
+
+            /*
+            * Go pull any previously saved data
+            * */
+            buildfire.datastore.get(function (err, result) {
+
+                if (!err) {
+                    datastoreInitialized = true;
+                } else {
+                    console.error("Error: ", err);
+                    return;
+                }
+
+                if (result && result.data && !angular.equals({}, result.data)) {
+                    $scope.data = result.data;
+                    $scope.id = result.id;
+                }
+
+                if ($scope.data.design.backgroundImage) {
+                    background.loadbackground($scope.data.design.backgroundImage);
+                }
+
+                if (!$scope.$$phase && !$scope.$root.$$phase) {
+                    $scope.$apply();
+                }
+                /*
+                 * watch for changes in data and trigger the saveData function on change
+                 * */
+                $scope.$watch('data', saveData, true);
+
+                if (!$scope.$$phase && !$scope.$root.$$phase) {
+                    $scope.$apply();
+                }
+            });
+
+            /*
+             * Call the datastore to save the data object
+             * */
+            var saveData = function (newObj, oldObj) {
+
+                if (!datastoreInitialized) {
+                    console.error("Error with datastore didn't get called");
+                    return;
+                }
+
+                if (angular.equals(newObj, oldObj)) return;
+                if (newObj == undefined) return;
+                if ($scope.frmMain.$invalid) {
+                    console.warn('invalid data, details will not be saved');
+                    return;
+                }
+
+                buildfire.datastore.save(newObj, function (err, result) {
+                    if (err || !result) {
+                        console.error('Error saving the widget details: ', err);
+                    }
+                    else {
+                        console.info('Widget details saved');
+                    }
+                });
+            };
+
+
+            /*
+            * Open a dailog to change the background image
+            * */
+            $scope.changeBackground = function () {
+                buildfire.imageLib.showDialog({ showIcons: false, multiSelection: false }, function (error, result) {
+                    if (result && result.selectedFiles && result.selectedFiles.length > 0) {
+                        if (!$scope.data.design) {
+                            $scope.data.design = {};
+                        }
+                        $scope.data.design.backgroundImage = result.selectedFiles[0];
+                        if (!$scope.$$phase && !$scope.$root.$$phase) {
+                            $scope.$apply();
+                        }
+                    }
+                });
+            };
+
+            /*
+            * Get background image thumbnail
+            * */
+            $scope.resizeImage = function (url) {
+                if (!url) {
+                    return "";
+                }
+                else {
+                    return buildfire.imageLib.resizeImage(url, { width: 88 });
+                }
+            };
+
+            /*
+            * Delete the background and back to the default white background
+            * */
+            $scope.deleteBackground = function () {
+                $scope.data.design.backgroundImage = "";
+            };
+
+            background.onChange = function (url) {
+                $scope.data.design.backgroundImage = url;
+                if (!$scope.$$phase && !$scope.$root.$$phase) {
+                    $scope.$apply();
+                }
+            }
+
+            background.onDelete = function (url) {
+                $scope.data.design.backgroundImage = "";
+                if (!$scope.$$phase && !$scope.$root.$$phase) {
+                    $scope.$apply();
+                }
+            }
+
+            $scope.changeLayout = function (layoutId) {
+                if (!$scope.data.design) {
+                    $scope.data.design = {};
+                }
+                var newLayout = layoutId + 1;
+                if (newLayout != $scope.data.design.selectedLayout) {
+                    $scope.data.design.selectedLayout = newLayout;
+                    if (!$scope.$$phase && !$scope.$root.$$phase) {
+                        $scope.$apply();
+                    }
+                }
+            };
+        }]);
+    </script>
+</body>
+</html>
