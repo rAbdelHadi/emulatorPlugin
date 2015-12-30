@@ -30,7 +30,7 @@
         <div id="carousel"></div>
         <div ng-bind-html="data.content.text" class="widget-content padded"></div>
 		<div class="link-holder">
-			<a class="btn btn-primary stretch">Load App</a>
+			<a class="btn btn-primary stretch" ng-click="navigateEmulator()">Load App</a>
 		</div>
     </div>
     <script>
@@ -131,6 +131,10 @@
                     }
                     return buildfire.imageLib.cropImage(url, options);
                 }
+            };
+
+            $scope.navigateEmulator = function() {
+                buildfire.navigation.navigateEmulator();
             };
 
         }]);
